@@ -30,19 +30,23 @@
       Allocate(Array_Input((NDim*(NDim+1))/2),Matrix(NDim,NDim))
       Allocate(EVals(NDim),EVecs(NDim,NDim),Temp_Vector(3*NDim))
       Allocate(Temp_Matrix(NDim,NDim))
+       Do i=1,(NDim*(NDim+1))/2
+        Read(IIn,*) Array_Input(i)
+        EndDo
+        Close(Unit=IIn)
 !
 ! *************************************************************************
 ! WRITE CODE HERE TO READ THE ARRAY ELEMENTS FROM THE INPUT FILE.
 ! *************************************************************************
-!
-      Close(Unit=IIn)
+!      
+            
 !
 !     Convert Array_Input to Matrix and print the matrix.
 !
       Write(*,*)' The matrix loaded (column) lower-triangle packed:'
       Call SymmetricPacked2Matrix_LowerPac(NDim,Array_Input,Matrix)
       Call Print_Matrix_Full_Real(Matrix,NDim,NDim)
-      Call SSPEV('***','***',NDim,Array_Input,EVals,EVecs,NDim,  &
+      Call SSPEV('V','L',NDim,Array_Input,EVals,EVecs,NDim,&
         Temp_Vector,IError)
       If(IError.ne.0) then
         Write(*,*)' Failure in DSPEV.'
@@ -54,3 +58,54 @@
       Call Print_Matrix_Full_Real(EVecs,NDim,NDim)
 !
       End Program pgrm_02_03
+      
+      Subroutine SymmetricPacked2Matrix_LowerPac(N,ArrayIn,AMatOut)
+     
+      Implicit None
+      Real,Dimension(N*N)::ArrayIn
+      Real,Dimension(N,N)::AMatOut
+!
+      Integer::i,j,k,N
+
+! *************************************************************************
+! WRITE CODE HERE TO READ THE ARRAY ELEMENTS FROM THE INPUT FILE.
+! *************************************************************************
+!
+      k=1
+      Do i=1,N
+        Do j=i,N
+        AMatOut(i,j)=ArrayIn(k)
+        AMatOut(j,i)=AMatOut(i,j)
+        k=k+1
+        EndDo
+        EndDo
+
+
+      Return
+      End Subroutine SymmetricPacked2Matrix_LowerPac
+
+      Subroutine Print_Matrix_Full_Real(AMat,M,N)
+
+      implicit none
+      integer,intent(in)::M,N
+      real,dimension(M,N),intent(in)::AMat
+
+      integer,parameter::IOut=6,NColumns=5
+      integer::i,j,IFirst,ILast
+
+ 1000 Format(1x,A)
+ 2000 Format(5x,5(7x,I7))
+ 2010 Format(1x,I7,5F14.6)
+
+      Do IFirst = 1,N,NColumns
+        ILast = Min(IFirst+NColumns-1,N)
+        write(IOut,2000) (i,i=IFirst,ILast)
+        Do i = 1,M
+          write(IOut,2010) i,(AMat(i,j),j=IFirst,ILast)
+        endDo
+      endDo
+
+      Return
+
+      End Subroutine Print_Matrix_Full_Real
+
